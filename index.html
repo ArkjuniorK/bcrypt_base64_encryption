@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bcrypt & Base64 Password Encryption</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+</head>
+<body>
+    <main class="tile is-parent is-vertical container is-half-widescreen mt-5" style="width: 480px">
+        <div class="tile is-child notification is-light has-shadow">
+            <h4 class="title">Hash Kata Sandi</h4>
+            <div class="subtitle">Mengubah kata sandi menjadi hash sehingga tidak dapat dibaca seccara langsung</div>
+            <form class="mt-1" hx-post="/hash" hx-trigger="submit" hx-target="#hash">
+                <label class="label">
+                    Kata Sandi
+                    <input type="password" name="password" class="input is-half-mobile" placeholder="*******">
+                </label>
+                <button type="submit" class="button mt-1">Hash</button>
+            </form>
+            <div class="mt-2">Hasil Hash:</div>
+            <p id="hash" class="content subtitle is-6 is-bold"></p>
+        </div>
+
+        <div class="tile is-child notification is-light has-shadow">
+            <h4 class="title">Komparasi Kata Sandi</h4>
+            <div class="subtitle">Menentukan apakah kata sandi yang dimasukkan cocok dengan hasil hash yang tersimpan</div>
+            <form class="mt-1" hx-post="/compare" hx-trigger="submit" hx-target="#output">
+                <label class="label">
+                    Kata Sandi
+                    <input type="password" name="plain_password" class="input is-half-mobile" placeholder="*******">
+                </label>
+                <label class="label">
+                    Hasil Hash
+                    <input type="text" name="hashed_password" class="input is-half-mobile" placeholder="Cth: $2a$11$o/w3bKjGIn1s/mUYL...">
+                </label>
+                <label class="label">
+                    <input type="checkbox" name="with_base64" class="checkbox">
+                    Encoding Base64
+                </label>
+                <button type="submit" class="button mt-1">Bandingkan</button>
+            </form>
+            <div class="mt-2">Output:</div>
+            <p id="output" class="content subtitle is-6 is-bold"></p>
+        </div>
+    </main>
+</body>
+</html>
