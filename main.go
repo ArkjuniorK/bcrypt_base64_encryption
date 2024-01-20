@@ -3,14 +3,17 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
+	"time"
 )
 
 // Below is an implementation of Bcrypt with Base64 encoding
@@ -20,14 +23,7 @@ import (
 // - Create the journal for this program []
 // - Add user interface to encrypt and decrypt [done]
 
-const (
-	cost = 11
-	addr = "localhost:8080"
-)
-
-var (
-	t = template.Must(template.ParseFiles("index.html"))
-)
+const addr = "localhost:8080"
 
 func main() {
 	var (
@@ -102,6 +98,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) serveIndex(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.ParseFiles("index.html"))
 	err := t.Execute(w, nil)
 	if err != nil {
 		panic(err)
@@ -109,21 +106,48 @@ func (h *handler) serveIndex(w http.ResponseWriter, r *http.Request) {
 
 }
 
+type result struct {
+	Result  string
+	Elapsed string
+}
+
 func (h *handler) handleHash(w http.ResponseWriter, r *http.Request) {
+	const tptText = `
+        <div class="mt-2">Waktu: {{ .Elapsed }}</div>
+		<div class="mt-2">Hasil Hash:</div>
+        <p class="content subtitle is-6 is-bold"> {{ .Result }} </p>
+	`
+
+	c := r.FormValue("cost")
 	p := r.FormValue("password")
 	e := base64.StdEncoding.EncodeToString([]byte(p))
 
-	hs, err := bcrypt.GenerateFromPassword([]byte(e), cost)
+	cost, err := strconv.Atoi(c)
 	if err != nil {
 		panic(err)
 	}
 
-	tpl := template.Must(template.New("hash").Parse("{{ . }}"))
-	tpl.Execute(w, string(hs))
+	st := time.Now()
+	hs, err := bcrypt.GenerateFromPassword([]byte(e), cost)
+	if err != nil {
+		panic(err)
+	}
+	et := time.Since(st)
+
+	hr := &result{Result: string(hs), Elapsed: et.String()}
+	tpl := template.Must(template.New("hash").Parse(tptText))
+	tpl.Execute(w, hr)
 }
 
 func (h *handler) handleCompare(w http.ResponseWriter, r *http.Request) {
-	tpl := template.Must(template.New("compare").Parse("{{ . }}"))
+	const tplText = `
+          <div class="mt-2">Waktu: {{ .Elapsed }}</div>
+          <div class="mt-2">Output: {{ .Result }}</div>
+	`
+
+	tpl := template.Must(template.New("compare").Parse(tplText))
+
+	cr := &result{}
 
 	en := r.FormValue("with_base64")
 	ps := []byte(r.FormValue("plain_password"))
@@ -133,11 +157,27 @@ func (h *handler) handleCompare(w http.ResponseWriter, r *http.Request) {
 		ps = []byte(base64.StdEncoding.EncodeToString(ps))
 	}
 
+	st := time.Now()
 	err := bcrypt.CompareHashAndPassword(hs, ps)
 	if err != nil {
-		tpl.Execute(w, err.Error())
+		et := time.Since(st)
+		cr.Elapsed = et.String()
+		cr.Result = h.handleBcryptError(err)
+
+		tpl.Execute(w, cr)
 		return
 	}
 
-	tpl.Execute(w, "Kata sandi dan hash cocok")
+	et := time.Since(st)
+	cr.Elapsed = et.String()
+	cr.Result = "Cocok"
+	tpl.Execute(w, cr)
+}
+
+func (h *handler) handleBcryptError(err error) string {
+	if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+		return "Tidak Cocok"
+	}
+
+	return "Terjadi Kesalahan!"
 }

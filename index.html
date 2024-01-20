@@ -17,10 +17,16 @@
                     Kata Sandi
                     <input type="password" name="password" class="input is-half-mobile" placeholder="*******">
                 </label>
+                <label class="label">
+                    <i>Round Cost</i>
+                    <input type="number" name="cost" class="input is-half-mobile" value="10" max="14" min="4">
+                </label>
                 <button type="submit" class="button mt-1">Hash</button>
             </form>
-            <div class="mt-2">Hasil Hash:</div>
-            <p id="hash" class="content subtitle is-6 is-bold"></p>
+            <div id="hash">
+                <div class="mt-2">Waktu: 0ms</div>
+                <div class="mt-2">Hasil Hash:</div>
+            </div>
         </div>
 
         <div class="tile is-child notification is-light has-shadow">
@@ -41,8 +47,10 @@
                 </label>
                 <button type="submit" class="button mt-1">Bandingkan</button>
             </form>
-            <div class="mt-2">Output:</div>
-            <p id="output" class="content subtitle is-6 is-bold"></p>
+            <div id="output">
+                <div class="mt-2">Waktu: 0ms</div>
+                <div class="mt-2">Output:</div>
+            </div>
         </div>
     </main>
 </body>
